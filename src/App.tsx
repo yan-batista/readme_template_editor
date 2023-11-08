@@ -27,38 +27,38 @@ function App() {
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
   const editorDefaultValue = `# Welcome to Markdown
 
-    Markdown is a lightweight markup language that you can use to add formatting elements to plaintext text documents.
-    
-    ## How to use this?
-    
-    1. Write markdown in the markdown editor window
-    2. See the rendered markdown in the preview window
-    
-    ### Features
-    
-    - Create headings, paragraphs, links, blockquotes, inline-code, code blocks, and lists
-    - Name and save the document to access again later
-    - Choose between Light or Dark mode depending on your preference
-    
-    > This is an example of a blockquote. If you would like to learn more about markdown syntax, you can visit this [markdown cheatsheet](https://www.markdownguide.org/cheat-sheet/).
-    
-    #### Headings
-    
-    To create a heading, add the hash sign (#) before the heading. The number of number signs you use should correspond to the heading level. You'll see in this guide that we've used all six heading levels (not necessarily in the correct way you should use headings!) to illustrate how they should look.
-    
-    ##### Lists
-    
-    You can see examples of ordered and unordered lists above.
-    
-    ###### Code Blocks
+  Markdown is a lightweight markup language that you can use to add formatting elements to plaintext text documents.
+  
+  ## How to use this?
+  
+  1. Write markdown in the markdown editor window
+  2. See the rendered markdown in the preview window
+  
+  ### Features
+  
+  - Create headings, paragraphs, links, blockquotes, inline-code, code blocks, and lists
+  - Name and save the document to access again later
+  - Choose between Light or Dark mode depending on your preference
+  
+  > This is an example of a blockquote. If you would like to learn more about markdown syntax, you can visit this [markdown cheatsheet](https://www.markdownguide.org/cheat-sheet/).
+  
+  #### Headings
+  
+  To create a heading, add the hash sign (#) before the heading. The number of number signs you use should correspond to the heading level. You'll see in this guide that we've used all six heading levels (not necessarily in the correct way you should use headings!) to illustrate how they should look.
+  
+  ##### Lists
+  
+  You can see examples of ordered and unordered lists above.
+  
+  ###### Code Blocks
 
-    This markdown editor allows for inline-code snippets, like this: \`<p>I'm inline</p>\`. It also allows for larger code blocks like this:
+  This markdown editor allows for inline-code snippets, like this: \`<p>I'm inline</p>\`. It also allows for larger code blocks like this:
 
-    \`\`\`html
-    <main>
-      <h1>This is a larger code block</h1>
-    </main>
-    \`\`\`
+  \`\`\`html
+  <main>
+    <h1>This is a larger code block</h1>
+  </main>
+  \`\`\`
   `;
   const [editorText, setEditorText] = useState<string>(
     editorDefaultValue
@@ -107,6 +107,19 @@ function App() {
     });
   }
 
+  function downloadMarkdownFile() {
+    const input: HTMLTextAreaElement | null = document.querySelector("#editor_textarea");
+    if (input) {
+      const blob = new Blob([input.value], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "README.md";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  }
+
   function onClickSetSectionSelected(event: React.MouseEvent<HTMLLIElement>) {
     const sectionName = lowercaseString(event.currentTarget.innerHTML.replace(/ /g, "_"));
     setSections((prevSections) =>
@@ -131,10 +144,14 @@ function App() {
         <div id="hamburger_menu" className="bg-light_gray p-4 w-fit rounded-md" onClick={onClickHandleMenu}>
           <img src={HamburguerIcon} alt="click to open menu" className="w-7 h-7" />
         </div>
-        <div id="download_button" className="bg-primary p-4 w-fit flex flex-row items-center gap-4 rounded-md">
+        <button
+          id="download_button"
+          className="bg-primary p-4 w-fit flex flex-row items-center gap-4 rounded-md"
+          onClick={downloadMarkdownFile}
+        >
           <img src={DownloadIcon} alt="click to open menu" className="w-5 h-5" />
           <p className="hidden text-white font-bold md:inline">Download</p>
-        </div>
+        </button>
       </header>
 
       {isMenuOpen && (
@@ -156,14 +173,19 @@ function App() {
         </>
       )}
 
-      <section className="flex flex-row h-full">
+      <section className="flex flex-row flex-grow overflow-hidden">
         <section id="editor" className={`w-full flex flex-col ${isEditorOpen ? "lg:flex" : "hidden lg:flex"}`}>
           <div id="editor_title" className="bg-very_dark_gray p-2 flex flex-row items-center justify-between">
             <span>Editor</span>
-            <img src={EyeIcon} alt="alternate to preview" className="w-5 h-5" onClick={onClickChangeEditorAndPreview} />
+            <img
+              src={EyeIcon}
+              alt="alternate to preview"
+              className="w-5 h-5 lg:hidden"
+              onClick={onClickChangeEditorAndPreview}
+            />
           </div>
           <textarea
-            className="bg-editor w-full flex-grow focus:outline-none focus:ring-0 p-4"
+            className="bg-editor w-full flex-grow focus:outline-none focus:ring-0 resize-none p-4 max-h-min overflow-y-scroll"
             id="editor_textarea"
             name="editor_textarea"
             value={editorText}
@@ -171,17 +193,22 @@ function App() {
           ></textarea>
         </section>
 
-        <section id="preview" className={`w-full flex flex-col ${isPreviewOpen ? "lg:flex" : "hidden lg:flex"}`}>
+        <section
+          id="preview"
+          className={`w-full h-full flex flex-col flex-grow overflow-auto ${
+            isPreviewOpen ? "lg:flex" : "hidden lg:flex"
+          }`}
+        >
           <div id="preview_title" className="bg-very_dark_gray p-2 flex flex-row items-center justify-between">
             <span>Preview</span>
             <img
               src={EyeOffIcon}
               alt="alternate to editor"
-              className="w-5 h-5"
+              className="w-5 h-5 lg:hidden"
               onClick={onClickChangeEditorAndPreview}
             />
           </div>
-          <div className="bg-editor p-4 text-text overflow-y-scroll" id="previewText">
+          <div className="bg-editor w-full p-4 flex-grow flex-shrink overflow-y-auto text-text" id="previewText">
             <Markdown options={{ wrapper: Fragment }}>{editorText}</Markdown>
           </div>
         </section>

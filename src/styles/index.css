@@ -8,11 +8,6 @@
   width: 10px;
 }
 
-#editor > textarea::-webkit-scrollbar-track,
-#previewText > div::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
 #editor > textarea::-webkit-scrollbar-thumb,
 #previewText::-webkit-scrollbar-thumb {
   background: #888;
@@ -26,12 +21,16 @@
 /* Custom scrollbar for IE, Edge and Firefox */
 #editor > textarea {
   scrollbar-width: thin;
-  scrollbar-color: #888 #f1f1f1;
+  scrollbar-color: #888 transparent;
+}
+
+#editor > textarea::webkit-resizer {
+  display: none;
 }
 
 @layer base {
   body {
-    @apply bg-slate-900 text-white;
+    @apply bg-slate-900 text-white overflow-y-hidden;
   }
 
   body,
