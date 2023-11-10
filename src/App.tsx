@@ -5,24 +5,21 @@ import HamburguerIcon from "./assets/menu.svg";
 import DownloadIcon from "./assets/download.svg";
 import EyeIcon from "./assets/eye.svg";
 import EyeOffIcon from "./assets/eye-off.svg";
+import TrashIcon from "./assets/trash.svg";
+import RefreshIcon from "./assets/refresh-ccw.svg";
+
+import SectionsData from "./data";
 
 interface Section {
   name: string;
   selected: boolean;
+  defaultText: string;
+  currentText: string;
 }
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [sections, setSections] = useState<Section[]>([
-    { name: "title", selected: true },
-    { name: "table_of_contents", selected: false },
-    { name: "functions", selected: false },
-    { name: "screenshots", selected: false },
-    { name: "link", selected: false },
-    { name: "built_with", selected: false },
-    { name: "what_I_learned", selected: false },
-    { name: "author", selected: false },
-  ]);
+  const [sections, setSections] = useState<Section[]>(SectionsData);
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(true);
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
   const editorDefaultValue = `# Welcome to Markdown
@@ -87,20 +84,40 @@ function App() {
     return value.charAt(0).toUpperCase() + value.slice(1);
   }
 
-  function lowercaseString(value: string) {
-    return value.charAt(0).toLowerCase() + value.slice(1);
-  }
-
   function getSections(isSelected: boolean) {
     return sections.map((section, idx) => {
       if (section.selected === isSelected) {
         return (
           <li
-            className="list-none bg-offwhite rounded-md p-2 text-black my-1"
+            className="group list-none bg-offwhite rounded-md p-2 text-black my-1 flex flex-row items-center justify-between cursor-pointer select-none"
             key={`${idx}-${section}`}
-            onClick={onClickSetSectionSelected}
+            onClick={
+              section.selected
+                ? () => {
+                    onClickGetCurrentText(section.currentText);
+                  }
+                : onClickSetSectionSelection
+            }
+            data-name={section.name}
           >
-            {capitalize(section.name.replace(/_/g, " "))}
+            <p>{capitalize(section.name.replace(/_/g, " "))}</p>
+            {section.selected && (
+              <div className="flex-row gap-2 hidden group-hover:flex">
+                <img
+                  src={RefreshIcon}
+                  alt="refresh the content for this section"
+                  className="w-4 h-4"
+                  data-name={section.name}
+                />
+                <img
+                  src={TrashIcon}
+                  alt="remove this section"
+                  className="w-4 h-4"
+                  onClick={onClickSetSectionSelection}
+                  data-name={section.name}
+                />
+              </div>
+            )}
           </li>
         );
       }
@@ -120,13 +137,15 @@ function App() {
     }
   }
 
-  function onClickSetSectionSelected(event: React.MouseEvent<HTMLLIElement>) {
-    const sectionName = lowercaseString(event.currentTarget.innerHTML.replace(/ /g, "_"));
+  function onClickSetSectionSelection(event: React.MouseEvent<HTMLLIElement> | React.MouseEvent<HTMLImageElement>) {
+    const sectionName = event.currentTarget.dataset.name;
     setSections((prevSections) =>
       prevSections.map((section) =>
         section.name === sectionName ? { ...section, selected: !section.selected } : section
       )
     );
+    const currentSelected = sections.filter((section) => section.name === sectionName);
+    onClickGetCurrentText(currentSelected[0].currentText);
   }
 
   function onClickChangeEditorAndPreview() {
@@ -134,8 +153,26 @@ function App() {
     setIsPreviewOpen((prevState) => !prevState);
   }
 
+  function onClickGetCurrentText(value: string) {
+    setEditorText(value);
+  }
+
   function onChangeEditor(event: React.ChangeEvent<HTMLTextAreaElement>) {
     setEditorText(event.currentTarget.value);
+  }
+
+  function getPreviewValueFromAllSelected() {
+    let resultingText: string = "";
+    sections.map((section) => {
+      if (section.selected) {
+        resultingText += `\n\n${section.currentText}`;
+      }
+    });
+
+    return resultingText
+      .split("\n")
+      .map((line) => line.trimStart())
+      .join("\n");
   }
 
   return (
@@ -209,7 +246,7 @@ function App() {
             />
           </div>
           <div className="bg-editor w-full p-4 flex-grow flex-shrink overflow-y-auto text-text" id="previewText">
-            <Markdown options={{ wrapper: Fragment }}>{editorText}</Markdown>
+            <Markdown options={{ wrapper: Fragment }}>{getPreviewValueFromAllSelected()}</Markdown>
           </div>
         </section>
       </section>
