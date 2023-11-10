@@ -25,6 +25,7 @@ function App() {
   const [editorText, setEditorText] = useState<string>(
     removeIdentationOnMarkdown(sections.filter((section) => section.selected === true)[0]?.currentText || ``)
   );
+  const [currentSelectedSection, setCurrentSelectedSection] = useState("title");
 
   useEffect(() => {
     const previewText = document.querySelector("#previewText");
@@ -57,6 +58,7 @@ function App() {
               section.selected
                 ? () => {
                     onClickGetCurrentText(section.currentText);
+                    setCurrentSelectedSection(section.name);
                   }
                 : onClickSetSectionSelection
             }
@@ -107,7 +109,10 @@ function App() {
         section.name === sectionName ? { ...section, selected: !section.selected } : section
       )
     );
+
     const currentSelected = sections.filter((section) => section.name === sectionName);
+    console.log(currentSelected[0]);
+    setCurrentSelectedSection(currentSelected[0].name);
     onClickGetCurrentText(removeIdentationOnMarkdown(currentSelected[0].currentText));
   }
 
@@ -128,6 +133,8 @@ function App() {
 
   function onChangeEditor(event: React.ChangeEvent<HTMLTextAreaElement>) {
     setEditorText(event.currentTarget.value);
+    const currentSelected = sections.filter((section) => section.name === currentSelectedSection)[0];
+    currentSelected.currentText = event.currentTarget.value;
   }
 
   function removeIdentationOnMarkdown(value: string) {
