@@ -1,4 +1,4 @@
-interface Section {
+export interface Section {
   name: string;
   selected: boolean;
   defaultText: string;

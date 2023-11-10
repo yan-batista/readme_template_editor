@@ -8,16 +8,8 @@ import EyeOffIcon from "./assets/eye-off.svg";
 import TrashIcon from "./assets/trash.svg";
 import RefreshIcon from "./assets/refresh-ccw.svg";
 
-import SectionsData from "./data";
-
-import { downloadMarkdownFile, removeIdentationOnMarkdown } from "./helpers";
-
-interface Section {
-  name: string;
-  selected: boolean;
-  defaultText: string;
-  currentText: string;
-}
+import SectionsData, { Section } from "./data";
+import { removeIdentationOnMarkdown, capitalize, findFirstSelectedSection } from "./helpers";
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -25,10 +17,12 @@ function App() {
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(true);
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
   const [editorText, setEditorText] = useState<string>(
-    removeIdentationOnMarkdown(sections.filter((section) => section.selected === true)[0]?.currentText || ``)
+    removeIdentationOnMarkdown(findFirstSelectedSection(sections)?.currentText || ``)
   );
-  const [currentSelectedSectionName, setCurrentSelectedSectionName] = useState("title");
+  const [currentSelectedSectionName, setCurrentSelectedSectionName] = useState<string | null>("title");
 
+  // Whenever editorText changes, it will look for anchor tags
+  // and change their targets to blank
   useEffect(() => {
     const previewText = document.querySelector("#previewText");
     if (previewText) {
@@ -41,14 +35,16 @@ function App() {
     }
   }, [editorText]);
 
+  /* ========== ASIDE MENU FUNCTIONS ========== */
+  // On click, opens and closes the aside menu
   function onClickHandleMenu() {
     setIsMenuOpen((prevState) => !prevState);
   }
 
-  function capitalize(value: string) {
-    return value.charAt(0).toUpperCase() + value.slice(1);
-  }
-
+  // This function will loop all sections and render them
+  // as a <li> based on the parameter
+  // isSelected === true -> get all sections where selected: true
+  // isSelected === false -> get all sections where selected: false
   function getSections(isSelected: boolean) {
     return sections.map((section, idx) => {
       if (section.selected === isSelected) {
@@ -59,9 +55,19 @@ function App() {
             onClick={
               section.selected
                 ? () => {
+                    // configure editor with the clicked section
                     configureEditor(section);
                   }
-                : onClickSetSectionSelection
+                : (event) => {
+                    // makes the section selected: true
+                    onClickSetSectionSelection(event);
+                    // gets the clicked section using its name
+                    const currentSelected = sections.filter(
+                      (section) => section.name === event.currentTarget.dataset.name
+                    )[0];
+                    // configure the editor with the clicked section
+                    configureEditor(currentSelected);
+                  }
             }
             data-name={section.name}
           >
@@ -79,7 +85,20 @@ function App() {
                   src={TrashIcon}
                   alt="remove this section"
                   className="w-4 h-4"
-                  onClick={onClickSetSectionSelection}
+                  onClick={(event) => {
+                    // stopPropagation so that when clicking the button,
+                    // it won't trigger the <li> onClick as well
+                    event.stopPropagation();
+                    // makes the section selected: false
+                    onClickSetSectionSelection(event);
+                    // configure the editor with the first selected: true section found
+                    // that is not the one clicked. if none, configures with null and
+                    // hides the editor to show a message
+                    const firstSelectedFound = findFirstSelectedSection(
+                      sections.filter((section) => section.name !== event.currentTarget.dataset.name)
+                    );
+                    configureEditor(firstSelectedFound);
+                  }}
                   data-name={section.name}
                 />
               </div>
@@ -90,7 +109,6 @@ function App() {
     });
   }
 
-  /* ========== ASIDE MENU FUNCTIONS ========== */
   // Clicking on a section OR trash icon will change "selected" to the opposite of the current value
   // Sets the currentSelectedSectionName state to the clicked section name
   // Sets the editor text to the clicked section
@@ -101,9 +119,6 @@ function App() {
         section.name === sectionName ? { ...section, selected: !section.selected } : section
       )
     );
-
-    const currentSelected = sections.filter((section) => section.name === sectionName)[0];
-    configureEditor(currentSelected);
   }
 
   // Clicking on the refresh icon will set the currentText to the defaultText
@@ -127,9 +142,13 @@ function App() {
 
   // Calls functions that set the current selected section name
   // and changes the editor text
-  function configureEditor(sec: Section) {
-    changeEditorText(removeIdentationOnMarkdown(sec.currentText));
-    setCurrentSelectedSectionName(sec.name);
+  function configureEditor(sec: Section | null) {
+    if (sec) {
+      changeEditorText(removeIdentationOnMarkdown(sec.currentText));
+      setCurrentSelectedSectionName(sec.name);
+    } else {
+      setCurrentSelectedSectionName(null);
+    }
   }
 
   // When typing on the editor, saves the text to the state
@@ -154,8 +173,22 @@ function App() {
     return removeIdentationOnMarkdown(resultingText);
   }
 
+  function downloadMarkdownFile() {
+    const resultString: string = getPreviewValueFromAllSelected();
+    if (resultString) {
+      const blob = new Blob([resultString], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "README.md";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  }
+
   return (
     <>
+      {/* HEADER */}
       <header className="bg-gray w-full flex flex-row items-center justify-between p-2">
         <div id="hamburger_menu" className="bg-light_gray p-4 w-fit rounded-md" onClick={onClickHandleMenu}>
           <img src={HamburguerIcon} alt="click to open menu" className="w-7 h-7" />
@@ -170,10 +203,11 @@ function App() {
         </button>
       </header>
 
+      {/* SIDE MENU */}
       {isMenuOpen && (
         <>
           <div id="side_bar_overlay" className="absolute top-0 w-full h-full z-[9]" onClick={onClickHandleMenu}></div>
-          <section
+          <aside
             id="side_bar"
             className="bg-dark_gray h-screen w-60 absolute top-0 z-10 flex flex-col items-start pt-4 gap-4 px-4"
           >
@@ -185,11 +219,12 @@ function App() {
               <p className="text-primary">Outras Seções</p>
               <ul className="flex flex-col w-full">{getSections(false)}</ul>
             </div>
-          </section>
+          </aside>
         </>
       )}
 
-      <section className="flex flex-row flex-grow overflow-hidden">
+      <section className="flex flex-row flex-grow overflow-hidden divide-x divide-light_gray">
+        {/* EDITOR */}
         <section id="editor" className={`w-full flex flex-col ${isEditorOpen ? "lg:flex" : "hidden lg:flex"}`}>
           <div id="editor_title" className="bg-very_dark_gray p-2 flex flex-row items-center justify-between">
             <span>Editor</span>
@@ -200,15 +235,22 @@ function App() {
               onClick={onClickChangeEditorAndPreview}
             />
           </div>
-          <textarea
-            className="bg-editor w-full flex-grow focus:outline-none focus:ring-0 resize-none p-4 max-h-min overflow-y-scroll"
-            id="editor_textarea"
-            name="editor_textarea"
-            value={editorText}
-            onChange={onChangeEditor}
-          ></textarea>
+          {currentSelectedSectionName !== null ? (
+            <textarea
+              className="bg-editor w-full flex-grow focus:outline-none focus:ring-0 resize-none p-4 max-h-min overflow-y-scroll"
+              id="editor_textarea"
+              name="editor_textarea"
+              value={editorText}
+              onChange={onChangeEditor}
+            ></textarea>
+          ) : (
+            <p className="text-primary text-center mt-[50%] md:mt-[10%] lg:mt-[5%] lg:text-xl">
+              Select a section on the aside menu to start editing!
+            </p>
+          )}
         </section>
 
+        {/* PREVIEW */}
         <section
           id="preview"
           className={`w-full h-full flex flex-col flex-grow overflow-auto ${
