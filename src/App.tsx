@@ -10,6 +10,8 @@ import RefreshIcon from "./assets/refresh-ccw.svg";
 
 import SectionsData from "./data";
 
+import { downloadMarkdownFile, removeIdentationOnMarkdown } from "./helpers";
+
 interface Section {
   name: string;
   selected: boolean;
@@ -25,7 +27,7 @@ function App() {
   const [editorText, setEditorText] = useState<string>(
     removeIdentationOnMarkdown(sections.filter((section) => section.selected === true)[0]?.currentText || ``)
   );
-  const [currentSelectedSection, setCurrentSelectedSection] = useState("title");
+  const [currentSelectedSectionName, setCurrentSelectedSectionName] = useState("title");
 
   useEffect(() => {
     const previewText = document.querySelector("#previewText");
@@ -57,8 +59,7 @@ function App() {
             onClick={
               section.selected
                 ? () => {
-                    onClickGetCurrentText(section.currentText);
-                    setCurrentSelectedSection(section.name);
+                    configureEditor(section);
                   }
                 : onClickSetSectionSelection
             }
@@ -89,19 +90,10 @@ function App() {
     });
   }
 
-  function downloadMarkdownFile() {
-    const input: HTMLTextAreaElement | null = document.querySelector("#editor_textarea");
-    if (input) {
-      const blob = new Blob([input.value], { type: "text/markdown" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "README.md";
-      link.click();
-      URL.revokeObjectURL(url);
-    }
-  }
-
+  /* ========== ASIDE MENU FUNCTIONS ========== */
+  // Clicking on a section OR trash icon will change "selected" to the opposite of the current value
+  // Sets the currentSelectedSectionName state to the clicked section name
+  // Sets the editor text to the clicked section
   function onClickSetSectionSelection(event: React.MouseEvent<HTMLLIElement> | React.MouseEvent<HTMLImageElement>) {
     const sectionName = event.currentTarget.dataset.name;
     setSections((prevSections) =>
@@ -110,40 +102,47 @@ function App() {
       )
     );
 
-    const currentSelected = sections.filter((section) => section.name === sectionName);
-    console.log(currentSelected[0]);
-    setCurrentSelectedSection(currentSelected[0].name);
-    onClickGetCurrentText(removeIdentationOnMarkdown(currentSelected[0].currentText));
+    const currentSelected = sections.filter((section) => section.name === sectionName)[0];
+    configureEditor(currentSelected);
   }
 
-  function onClickChangeEditorAndPreview() {
-    setIsEditorOpen((prevState) => !prevState);
-    setIsPreviewOpen((prevState) => !prevState);
-  }
-
-  function onClickGetCurrentText(value: string) {
-    setEditorText(removeIdentationOnMarkdown(value));
-  }
-
+  // Clicking on the refresh icon will set the currentText to the defaultText
   function onClickRefreshSection(event: React.MouseEvent<HTMLImageElement>) {
     const sectionName = event.currentTarget.dataset.name;
     const currentSelected = sections.filter((section) => section.name === sectionName);
     currentSelected[0].currentText = currentSelected[0].defaultText;
   }
 
+  /* ========== EDITOR FUNCTIONS ========== */
+  // ON MOBILE: Swaps between Editor and Preview
+  function onClickChangeEditorAndPreview() {
+    setIsEditorOpen((prevState) => !prevState);
+    setIsPreviewOpen((prevState) => !prevState);
+  }
+
+  // Sets the text in the editor to the value received
+  function changeEditorText(value: string) {
+    setEditorText(removeIdentationOnMarkdown(value));
+  }
+
+  // Calls functions that set the current selected section name
+  // and changes the editor text
+  function configureEditor(sec: Section) {
+    changeEditorText(removeIdentationOnMarkdown(sec.currentText));
+    setCurrentSelectedSectionName(sec.name);
+  }
+
+  // When typing on the editor, saves the text to the state
+  // and also changes the currentText for the current selected section that is being edited
   function onChangeEditor(event: React.ChangeEvent<HTMLTextAreaElement>) {
     setEditorText(event.currentTarget.value);
-    const currentSelected = sections.filter((section) => section.name === currentSelectedSection)[0];
+    const currentSelected = sections.filter((section) => section.name === currentSelectedSectionName)[0];
     currentSelected.currentText = event.currentTarget.value;
   }
 
-  function removeIdentationOnMarkdown(value: string) {
-    return value
-      .split("\n")
-      .map((line) => line.trimStart())
-      .join("\n");
-  }
-
+  /* ========== PREVIEW FUNCTIONS ========== */
+  // Will check all selected sections and create a string with
+  // all sections currentText
   function getPreviewValueFromAllSelected() {
     let resultingText: string = "";
     sections.map((section) => {
