@@ -77,15 +77,19 @@ const sections: Section[] = [
     selected: false,
     defaultText: `### What I learned
         Here you will write things that you learned while developing this application
+
         \`\`\`
         const hello: string = "Hello World";
         \`\`\`
+
         You can also put some code to exemplify things.`,
     currentText: `### What I learned
         Here you will write things that you learned while developing this application
+
         \`\`\`
         const hello: string = "Hello World";
         \`\`\`
+
         You can also put some code to exemplify things.`,
   },
   {
