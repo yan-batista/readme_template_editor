@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from "react";
 import Markdown from "markdown-to-jsx";
+import MDEditor from "@uiw/react-md-editor";
 
 import HamburguerIcon from "./assets/menu.svg";
 import DownloadIcon from "./assets/download.svg";
@@ -50,7 +51,9 @@ function App() {
       if (section.selected === isSelected) {
         return (
           <li
-            className="group list-none bg-offwhite rounded-md p-2 text-black my-1 flex flex-row items-center justify-between cursor-pointer select-none"
+            className={`group list-none bg-offwhite rounded-md p-2 border-2 text-black my-1 flex flex-row items-center justify-between cursor-pointer select-none ${
+              section.name === currentSelectedSectionName ? "border-primary" : ""
+            }`}
             key={`${idx}-${section}`}
             onClick={
               section.selected
@@ -209,7 +212,7 @@ function App() {
           <div id="side_bar_overlay" className="absolute top-0 w-full h-full z-[9]" onClick={onClickHandleMenu}></div>
           <aside
             id="side_bar"
-            className="bg-dark_gray h-screen w-60 absolute top-0 z-10 flex flex-col items-start pt-4 gap-4 px-4"
+            className="bg-dark_gray h-screen w-60 lg:w-80 absolute top-0 z-10 flex flex-col items-start pt-4 gap-4 px-4"
           >
             <div className="w-full">
               <p className="text-primary w-full">Seções Selecionadas</p>
@@ -236,13 +239,19 @@ function App() {
             />
           </div>
           {currentSelectedSectionName !== null ? (
-            <textarea
-              className="bg-editor w-full flex-grow focus:outline-none focus:ring-0 resize-none p-4 max-h-min overflow-y-scroll"
-              id="editor_textarea"
-              name="editor_textarea"
+            <MDEditor
+              className="flex-grow"
+              highlightEnable={true}
               value={editorText}
-              onChange={onChangeEditor}
-            ></textarea>
+              preview="edit"
+              visibleDragbar={false}
+              extraCommands={[]}
+              onChange={(_?: string, event?: React.ChangeEvent<HTMLTextAreaElement>) => {
+                if (event) {
+                  onChangeEditor(event);
+                }
+              }}
+            />
           ) : (
             <p className="text-primary text-center mt-[50%] md:mt-[10%] lg:mt-[5%] lg:text-xl">
               Select a section on the aside menu to start editing!

@@ -13,6 +13,9 @@ export default {
         offwhite: "#E5E5E5",
         text: "#C1C4CB",
       },
+      fontFamily: {
+        poppins: ["Poppins", "sans-serif"],
+      },
     },
   },
   plugins: [],

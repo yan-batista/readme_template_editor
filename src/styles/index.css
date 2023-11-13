@@ -1,31 +1,41 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap");
+
 @tailwind base;
 @tailwind utilities;
 @tailwind components;
 
 /* Custom scrollbar for Chrome, Safari and Opera */
-#editor > textarea::-webkit-scrollbar,
+.w-md-editor-input::-webkit-scrollbar,
 #previewText::-webkit-scrollbar {
   width: 10px;
 }
 
-#editor > textarea::-webkit-scrollbar-thumb,
+.w-md-editor-input::-webkit-scrollbar-thumb,
 #previewText::-webkit-scrollbar-thumb {
   background: #888;
 }
 
-#editor > textarea::-webkit-scrollbar-thumb:hover,
+.w-md-editor-input::-webkit-scrollbar-thumb:hover,
 #previewText::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
 
 /* Custom scrollbar for IE, Edge and Firefox */
-#editor > textarea {
+.w-md-editor-input {
   scrollbar-width: thin;
   scrollbar-color: #888 transparent;
 }
 
-#editor > textarea::webkit-resizer {
+.w-md-editor-input::webkit-resizer {
   display: none;
+}
+
+.w-md-editor-toolbar {
+  @apply bg-editor;
+}
+
+.w-md-editor-input {
+  @apply bg-editor flex-grow;
 }
 
 @layer base {
@@ -36,10 +46,6 @@
   body,
   html {
     @apply w-screen h-screen box-border;
-  }
-
-  main {
-    @apply flex flex-col h-screen;
   }
 }
 
@@ -65,6 +71,12 @@
   h6 {
     @apply font-bold text-white;
   }
+  #previewText h1,
+  #previewText h2,
+  #previewText h3 {
+    @apply border-b border-offwhite;
+  }
+
   #previewText h1 {
     @apply text-[32px];
   }
