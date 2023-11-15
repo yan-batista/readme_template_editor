@@ -10,16 +10,14 @@ import TrashIcon from "./assets/trash.svg";
 import RefreshIcon from "./assets/refresh-ccw.svg";
 
 import SectionsData, { Section } from "./data";
-import { removeIdentationOnMarkdown, capitalize, findFirstSelectedSection } from "./helpers";
+import { capitalize, findFirstSelectedSection } from "./helpers";
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [sections, setSections] = useState<Section[]>(SectionsData);
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(true);
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
-  const [editorText, setEditorText] = useState<string>(
-    removeIdentationOnMarkdown(findFirstSelectedSection(sections)?.currentText || ``)
-  );
+  const [editorText, setEditorText] = useState<string>(findFirstSelectedSection(sections)?.currentText || ``);
   const [currentSelectedSectionName, setCurrentSelectedSectionName] = useState<string | null>("title");
 
   // Whenever editorText changes, it will look for anchor tags
@@ -140,14 +138,14 @@ function App() {
 
   // Sets the text in the editor to the value received
   function changeEditorText(value: string) {
-    setEditorText(removeIdentationOnMarkdown(value));
+    setEditorText(value);
   }
 
   // Calls functions that set the current selected section name
   // and changes the editor text
   function configureEditor(sec: Section | null) {
     if (sec) {
-      changeEditorText(removeIdentationOnMarkdown(sec.currentText));
+      changeEditorText(sec.currentText);
       setCurrentSelectedSectionName(sec.name);
     } else {
       setCurrentSelectedSectionName(null);
@@ -173,7 +171,7 @@ function App() {
       }
     });
 
-    return removeIdentationOnMarkdown(resultingText);
+    return resultingText;
   }
 
   function downloadMarkdownFile() {
@@ -192,7 +190,7 @@ function App() {
   return (
     <>
       {/* HEADER */}
-      <header className="bg-gray w-full flex flex-row items-center justify-between p-2">
+      <header className="bg-gray w-full flex flex-row items-center justify-between p-2 cursor-pointer">
         <div id="hamburger_menu" className="bg-light_gray p-4 w-fit rounded-md" onClick={onClickHandleMenu}>
           <img src={HamburguerIcon} alt="click to open menu" className="w-7 h-7" />
         </div>

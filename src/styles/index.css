@@ -59,7 +59,8 @@
   #previewText ol,
   #previewText ul,
   #previewText p,
-  #previewText blockquote {
+  #previewText blockquote,
+  #previewText pre {
     @apply mb-4;
   }
 
@@ -121,5 +122,13 @@
 
   #previewText pre {
     @apply bg-gray rounded-md p-4 whitespace-pre-wrap;
+  }
+
+  #previewText table {
+    @apply table-auto;
+  }
+  #previewText table th,
+  #previewText table td {
+    @apply border border-text px-3 py-2;
   }
 }

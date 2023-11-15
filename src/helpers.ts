@@ -1,12 +1,5 @@
 import { Section } from "./data";
 
-export function removeIdentationOnMarkdown(value: string) {
-  return value
-    .split("\n")
-    .map((line) => line.trimStart())
-    .join("\n");
-}
-
 export function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
